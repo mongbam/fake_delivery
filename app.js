@@ -110,7 +110,8 @@ let state = {
   lastSavedOrder: {
     amount: 0,
     calories: 0
-  }
+  },
+  history: []
 };
 
 // DOM Cache
@@ -119,7 +120,8 @@ const views = {
   detail: document.getElementById('view-detail'),
   cart: document.getElementById('view-cart'),
   reflection: document.getElementById('view-reflection'),
-  delivery: document.getElementById('view-delivery')
+  delivery: document.getElementById('view-delivery'),
+  history: document.getElementById('view-history')
 };
 
 // Helper function to format price
@@ -174,6 +176,28 @@ function changeView(viewName, params = {}) {
   } else if (viewName === 'delivery') {
     if (views.delivery) views.delivery.classList.remove('hidden');
     renderDeliveryProgress();
+  } else if (viewName === 'history') {
+    if (views.history) views.history.classList.remove('hidden');
+    renderHistory();
+  }
+
+  // Update bottom nav bar active state
+  const nav = document.querySelector('.bottom-nav');
+  if (nav) {
+    if (viewName === 'home' || viewName === 'history') {
+      nav.classList.remove('hidden');
+      const navHome = document.getElementById('nav-home');
+      const navHistory = document.getElementById('nav-history');
+      if (viewName === 'home') {
+        if (navHome) navHome.classList.add('active');
+        if (navHistory) navHistory.classList.remove('active');
+      } else {
+        if (navHome) navHome.classList.remove('active');
+        if (navHistory) navHistory.classList.add('active');
+      }
+    } else {
+      nav.classList.add('hidden');
+    }
   }
 
   // Update floating cart visibility
@@ -188,6 +212,12 @@ function changeView(viewName, params = {}) {
 function loadStats() {
   state.cumulativeSavings = parseInt(localStorage.getItem('mindfoody_savings')) || 0;
   state.cumulativeSkips = parseInt(localStorage.getItem('mindfoody_skips')) || 0;
+  
+  try {
+    state.history = JSON.parse(localStorage.getItem('mindfoody_history')) || [];
+  } catch (e) {
+    state.history = [];
+  }
   
   // Update stats banner in home
   const statCount = document.getElementById('stat-count');
@@ -353,8 +383,16 @@ function updateFloatingCart() {
     bar.classList.remove('hidden');
     if (badge) badge.innerText = totalCount;
     if (price) price.innerText = formatPrice(total);
+
+    // Shift bar up if bottom nav bar is visible (e.g. Home view)
+    if (state.currentView === 'home') {
+      bar.classList.add('above-nav');
+    } else {
+      bar.classList.remove('above-nav');
+    }
   } else {
     bar.classList.add('hidden');
+    bar.classList.remove('above-nav');
   }
 }
 
@@ -510,6 +548,27 @@ function confirmResist() {
   localStorage.setItem('mindfoody_savings', state.cumulativeSavings.toString());
   localStorage.setItem('mindfoody_skips', state.cumulativeSkips.toString());
 
+  // Save detailed order receipt into history
+  const res = RESTAURANTS.find(r => r.id === state.activeRestaurantId);
+  const cartKeys = Object.keys(state.cart);
+  const itemsSummary = cartKeys.map(menuId => {
+    const menuInfo = getMenuItemById(menuId);
+    return `${menuInfo.menu.name} ${state.cart[menuId]}개`;
+  }).join(', ');
+
+  const historyItem = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }),
+    restaurantName: res ? res.name : '알 수 없는 식당',
+    restaurantEmoji: res ? res.emoji : '🍔',
+    items: itemsSummary,
+    amount: state.lastSavedOrder.amount,
+    calories: state.lastSavedOrder.calories
+  };
+
+  state.history.unshift(historyItem);
+  localStorage.setItem('mindfoody_history', JSON.stringify(state.history));
+
   showToast("🎉 나와의 건강한 약속을 지켰습니다!");
   changeView('delivery');
 }
@@ -580,6 +639,51 @@ function renderDeliveryProgress() {
   setTimeout(() => {
     if (actionBox) actionBox.classList.remove('hidden');
   }, 4000);
+}
+
+// Render Order History Page
+function renderHistory() {
+  const listContainer = document.getElementById('history-list');
+  const totalSavedEl = document.getElementById('history-total-saved');
+  const totalCountEl = document.getElementById('history-total-count');
+
+  if (totalSavedEl) totalSavedEl.innerText = formatPrice(state.cumulativeSavings);
+  if (totalCountEl) totalCountEl.innerText = `${state.cumulativeSkips}회`;
+
+  if (!listContainer) return;
+
+  if (state.history.length === 0) {
+    listContainer.innerHTML = `
+      <div class="history-empty">
+        <span class="history-empty-emoji">📝</span>
+        <h4 class="history-empty-text">아직 참아낸 주문 기록이 없습니다.</h4>
+        <p class="history-empty-subtext">배달이 당길 때 참아내어<br>나의 지갑과 몸에 절약을 배달해 주세요!</p>
+      </div>
+    `;
+    return;
+  }
+
+  listContainer.innerHTML = state.history.map(order => {
+    return `
+      <div class="history-card">
+        <div class="history-card-header">
+          <span class="history-card-date">${order.date}</span>
+          <span class="history-card-status">참기 완료</span>
+        </div>
+        <div class="history-card-body">
+          <span class="history-store-emoji">${order.restaurantEmoji}</span>
+          <div class="history-order-details">
+            <h4 class="history-store-name">${order.restaurantName}</h4>
+            <p class="history-items">${order.items}</p>
+            <div class="history-card-savings">
+              <span class="history-saving-money">💰 ${formatPrice(order.amount)} 절약</span>
+              <span class="history-saving-cal">🏃‍♂️ ${order.calories.toLocaleString()} kcal 차단</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // Global Event Listeners Setup
@@ -678,6 +782,17 @@ function initEvents() {
       changeView('home');
     });
   }
+
+  // Bottom navigation clicks
+  const navHome = document.getElementById('nav-home');
+  if (navHome) {
+    navHome.addEventListener('click', () => changeView('home'));
+  }
+
+  const navHistory = document.getElementById('nav-history');
+  if (navHistory) {
+    navHistory.addEventListener('click', () => changeView('history'));
+  }
 }
 
 // App Initialization
@@ -688,6 +803,7 @@ window.addEventListener('DOMContentLoaded', () => {
   views.cart = document.getElementById('view-cart');
   views.reflection = document.getElementById('view-reflection');
   views.delivery = document.getElementById('view-delivery');
+  views.history = document.getElementById('view-history');
 
   loadStats();
   initEvents();
