@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>마인드푸디 (MindFoody) - 배달 쉼터</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Fonts for premium looks -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Centered device layout shell for desktop, full-screen on mobile -->
+  <div class="app-shell">
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- 1. HOME VIEW -->
+    <section id="view-home" class="view">
+      <header class="home-header">
+        <div class="header-logo">
+          <span class="logo-emoji">🌿</span>
+          <span class="logo-text">MindFoody</span>
+        </div>
+        <div class="header-badge">배달쉼터</div>
+      </header>
+
+      <!-- Stats Cumulative Banner -->
+      <div class="stats-banner">
+        <div class="stats-bg-pattern"></div>
+        <div class="stats-card-content">
+          <p class="stats-subtitle">지금까지 건강을 지켜낸 횟수</p>
+          <h2 class="stats-title"><span id="stat-count">0</span>회</h2>
+          <div class="stats-divider"></div>
+          <div class="stats-savings-row">
+            <span class="savings-label">누적 절약 금액</span>
+            <strong class="savings-val" id="stat-amount">0원</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Filter Section -->
+      <div class="category-section">
+        <h3 class="section-title">음식 카테고리</h3>
+        <div class="category-list" id="category-list">
+          <!-- Dynamically populated from JS -->
+        </div>
+      </div>
+
+      <!-- Restaurant List Section -->
+      <div class="restaurant-section">
+        <h3 class="section-title">가상 맛집 찾기</h3>
+        <div class="restaurant-list" id="restaurant-list">
+          <!-- Dynamically populated from JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. DETAIL VIEW -->
+    <section id="view-detail" class="view hidden">
+      <header class="detail-header">
+        <button class="btn-back" id="btn-detail-back" aria-label="뒤로가기">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <span class="detail-title">상세 정보</span>
+        <div class="header-placeholder"></div>
+      </header>
+
+      <!-- Restaurant Cover (Emoji Splash) -->
+      <div class="restaurant-cover">
+        <div class="cover-gradient"></div>
+        <div class="cover-emoji" id="detail-emoji">🍔</div>
+      </div>
+
+      <!-- Restaurant Metadata Card -->
+      <div class="detail-info-card">
+        <div class="detail-name-row">
+          <h2 id="detail-name">레스토랑 명</h2>
+          <span class="detail-rating">⭐ <span id="detail-rating-val">4.9</span></span>
+        </div>
+        <p class="detail-desc" id="detail-desc">음식점 설명입니다.</p>
+        <div class="detail-meta">
+          <div class="meta-item">
+            <span class="meta-label">배달팁</span>
+            <span class="meta-val" id="detail-delivery-fee">0원</span>
+          </div>
+          <div class="meta-item-divider"></div>
+          <div class="meta-item">
+            <span class="meta-label">배달시간</span>
+            <span class="meta-val" id="detail-delivery-time">20~30분</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Restaurant Menu Selection -->
+      <div class="menu-section">
+        <h3 class="section-title">메뉴</h3>
+        <div class="menu-list" id="menu-list">
+          <!-- Dynamically populated from JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. CART VIEW -->
+    <section id="view-cart" class="view hidden">
+      <header class="cart-header">
+        <button class="btn-back" id="btn-cart-back" aria-label="뒤로가기">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <span class="cart-title">장바구니</span>
+        <div class="header-placeholder"></div>
+      </header>
+
+      <!-- Active Cart Container -->
+      <div class="cart-content-container">
+        <div class="cart-restaurant-banner">
+          <span class="store-emoji">🏪</span>
+          <span class="store-name" id="cart-restaurant-name">음식점 명</span>
+        </div>
+
+        <div class="cart-items-list" id="cart-items-list">
+          <!-- Dynamically populated from JS -->
+        </div>
+
+        <!-- Bill Invoice Breakdown -->
+        <div class="bill-container">
+          <h4 class="bill-title">결제 금액 상세</h4>
+          <div class="bill-row">
+            <span class="bill-label">주문 금액</span>
+            <span class="bill-value" id="bill-subtotal">0원</span>
+          </div>
+          <div class="bill-row">
+            <span class="bill-label">가상 배달팁</span>
+            <span class="bill-value" id="bill-delivery-fee">0원</span>
+          </div>
+          <div class="bill-divider"></div>
+          <div class="bill-row bill-total-row">
+            <span class="bill-label-total">총 절약할 금액</span>
+            <span class="bill-value-total" id="bill-total">0원</span>
+          </div>
+        </div>
+
+        <!-- Checkout Action Button -->
+        <div class="cart-action-container">
+          <button class="btn-checkout" id="btn-checkout">
+            <span id="btn-checkout-total">0원</span> 주문하기
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State View -->
+      <div class="cart-empty-container hidden" id="cart-empty-view">
+        <div class="empty-emoji-box">
+          <span class="empty-emoji">🛒</span>
+        </div>
+        <h3 class="empty-title">장바구니가 텅 비었어요</h3>
+        <p class="empty-subtext">참고 싶은 야식이나 맛있는 메뉴를<br>장바구니에 채워보세요.</p>
+        <button class="btn-go-home" id="btn-empty-home">메뉴 보러 가기</button>
+      </div>
+    </section>
+
+    <!-- 4. REFLECTION VIEW (WAIT, IS THIS REAL HUNGER?) -->
+    <section id="view-reflection" class="view hidden">
+      <div class="reflection-container">
+        <!-- Calming Indicator -->
+        <div class="reflection-lottie-placeholder">
+          <div class="circle-ripple ripple-1"></div>
+          <div class="circle-ripple ripple-2"></div>
+          <div class="reflection-icon">🌿</div>
+        </div>
+        
+        <h2 class="reflection-title">잠깐, 진짜 배고픔일까요?</h2>
+        <p class="reflection-subtitle">
+          가짜 배고픔은 스트레스나 심심함으로 인한 호르몬의 일시적 신호일 수 있어요. 물 한 잔을 마시고 5분만 기다려보면 신기하게 사라지기도 합니다.
+        </p>
+
+        <!-- Current Order Impact Box -->
+        <div class="reflection-card current-impact">
+          <h3 class="impact-section-title">이번 결정을 통해 얻는 것</h3>
+          
+          <div class="impact-row">
+            <span class="impact-icon-circle bg-orange">💰</span>
+            <div class="impact-text-group">
+              <span class="impact-label">내 계좌에 남겨둔 금액</span>
+              <strong class="impact-val text-coral" id="reflect-current-saved">0원</strong>
+            </div>
+          </div>
+
+          <div class="impact-row">
+            <span class="impact-icon-circle bg-blue">🏃‍♂️</span>
+            <div class="impact-text-group">
+              <span class="impact-label">덜 섭취한 영양 정보</span>
+              <strong class="impact-val" id="reflect-current-calories">0 kcal</strong>
+              <span class="impact-subtext" id="reflect-calories-compare">조깅 0분 효과</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Projected Cumulative Milestone -->
+        <div class="reflection-card cumulative-impact">
+          <h3 class="impact-section-title">나의 누적 절약 기록 (예정)</h3>
+          <div class="cumulative-stat-grid">
+            <div class="cum-stat-box">
+              <span class="cum-stat-label">참은 횟수</span>
+              <strong class="cum-stat-val" id="reflect-cum-count">0회</strong>
+            </div>
+            <div class="cum-stat-box">
+              <span class="cum-stat-label">누적 절약 금액</span>
+              <strong class="cum-stat-val text-green" id="reflect-cum-amount">0원</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Warm Supportive Quote -->
+        <div class="reflection-quote">
+          "오늘 참아낸 한 끼는 단순히 돈을 아낀 것을 넘어,<br>나의 습관과 신체를 스스로 조절하는 소중한 경험입니다."
+        </div>
+
+        <!-- Interactive Decisions -->
+        <div class="reflection-buttons">
+          <button class="btn-confirm-save" id="btn-confirm-save">참아냈어요! 😊 (홈으로)</button>
+          <button class="btn-cancel-save" id="btn-cancel-save">조금만 더 생각할게요 (장바구니)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. DELIVERY PROGRESS VIEW -->
+    <section id="view-delivery" class="view hidden">
+      <header class="delivery-header">
+        <span class="delivery-title">배달 현황</span>
+        <div class="header-placeholder"></div>
+      </header>
+
+      <div class="delivery-progress-container">
+        <!-- Visual Animation Area -->
+        <div class="delivery-animation-box">
+          <div class="delivery-road">
+            <span class="rider-emoji" id="delivery-rider">🛵</span>
+          </div>
+          <div class="delivery-destination">🏦 내 계좌</div>
+        </div>
+
+        <!-- Live Status Steps -->
+        <div class="delivery-status-timeline">
+          <div class="status-step" id="step-1">
+            <div class="status-marker">✓</div>
+            <div class="status-content">
+              <div class="status-title-text">가짜 배고픔 극복</div>
+              <div class="status-desc-text">주문 차단 및 참기 완료!</div>
+            </div>
+          </div>
+          
+          <div class="status-step" id="step-2">
+            <div class="status-marker">✓</div>
+            <div class="status-content">
+              <div class="status-title-text">절약 금액 배송 준비</div>
+              <div class="status-desc-text" id="delivery-saved-money">0원 입금 예정</div>
+            </div>
+          </div>
+          
+          <div class="status-step" id="step-3">
+            <div class="status-marker">✓</div>
+            <div class="status-content">
+              <div class="status-title-text">건강 지수 배달 중</div>
+              <div class="status-desc-text" id="delivery-saved-cal">0 kcal 절약 완료</div>
+            </div>
+          </div>
+          
+          <div class="status-step" id="step-4">
+            <div class="status-marker">✓</div>
+            <div class="status-content">
+              <div class="status-title-text">나에게 배달 완료!</div>
+              <div class="status-desc-text">지갑 잔고와 건강한 내일이 배달되었습니다. 🌿</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Complete Button -->
+        <div class="delivery-action-container hidden" id="delivery-action-box">
+          <button class="btn-delivery-complete" id="btn-delivery-complete">확인 (홈으로)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- FLOATING CART BUTTON BAR -->
+    <div id="floating-cart-bar" class="floating-cart-bar hidden">
+      <div class="floating-cart-content">
+        <div class="floating-cart-left">
+          <div class="floating-cart-badge-container">
+            <span id="floating-cart-badge">0</span>
+          </div>
+          <span class="floating-cart-label">장바구니 보기</span>
+        </div>
+        <span class="floating-cart-price" id="floating-cart-price">0원</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
